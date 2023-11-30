@@ -1,0 +1,40 @@
+name: Build
+on: push
+
+jobs:
+  build-standalone:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Set up golang
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.21'
+      - name: Run the build
+        run: go build -o edge-resource-manager edge-resource-manager.go
+      - name: Run go-vet
+        run: go vet ./...
+      - name: Run Golint
+        run: |
+          sudo apt-get update
+          sudo apt-get install golint
+          # Remove the vendor folder - we don't need to check that.
+          rm -rf vendor
+          golint ./... >golint_output
+          lines=$(wc -l < "golint_output")
+          if [[ $lines -gt 0 ]]; then
+              cat golint_output
+              exit 1
+          fi
+      - name: Check yq compliancy
+        run: |
+          sudo snap install yq
+          yq -r "." <izuma-base-config.yaml >yqout.yaml
+          if diff -u izuma-base-config.yaml yqout.yaml
+          then
+            echo "yq compliancy check passed"
+          else
+            echo "yq compliancy check failed"
+            exit 1
+          fi
