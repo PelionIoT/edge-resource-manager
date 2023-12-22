@@ -1,6 +1,6 @@
 # Edge Resource Manager
 
-The Edge Resource Manager adds LwM2M resources to an Edge device at runtime
+The Edge Resource Manager adds LwM2M resources to an Edge device at runtime.
 
 It achieves this by communicating to edge-core using the gateway resource manager REST API.
 
