@@ -42,7 +42,7 @@ func main() {
     flag.Parse()
 
     if configFlag != nil {
-        log.Infof("config file: %s\n", *configFlag)
+        log.Infof("config file: %s", *configFlag)
     }
 
     // Initialization starts off with reading in the entire config file,
@@ -53,7 +53,7 @@ func main() {
     err := config.LoadFromFile(*configFlag)
 
     if err != nil {
-        log.Errorf("Critical error. Config file parse failed --> %s\n", err.Error())
+        log.Errorf("Critical error. Config file parse failed --> %s", err.Error())
         os.Exit(1)
     }
 

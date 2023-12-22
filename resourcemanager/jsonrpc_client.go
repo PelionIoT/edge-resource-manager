@@ -230,11 +230,11 @@ func (c *Client) CallWithContext(ctx context.Context, method string, args interf
 
     select {
     case <-ctx.Done():
-        log.Debug("Client.CallWithContext(): context has been cancelled. Disconnect from the server and abort in-flight requests\n")
+        log.Debug("Client.CallWithContext(): context has been cancelled. Disconnect from the server and abort in-flight requests")
 
         return errCancelContext
     case <-time.After(requestTimeout):
-        log.Debug("Client.CallWithContext(): request timeout\n")
+        log.Debug("Client.CallWithContext(): request timeout")
 
         return errRequestTimeout
     case res := <-resp:
@@ -271,7 +271,7 @@ func (c *Client) CallWithTimeout(method string, args interface{}, result interfa
 
     select {
     case <-time.After(duration):
-        log.Debug("Client.CallWithContext(): request timeout\n")
+        log.Debug("Client.CallWithContext(): request timeout")
 
         return errRequestTimeout
     case res := <-resp:
@@ -302,11 +302,11 @@ func (c *Client) RespondWithContext(ctx context.Context, id string, res *json.Ra
 
     select {
     case <-ctx.Done():
-        log.Debug("Client.RespondWithContext(): context has been cancelled. Disconnect from the server and abort in-flight requests\n")
+        log.Debug("Client.RespondWithContext(): context has been cancelled. Disconnect from the server and abort in-flight requests")
 
         return errCancelContext
     case <-time.After(respondTimeout):
-        log.Debug("Client.RespondWithContext(): send response timeout\n")
+        log.Debug("Client.RespondWithContext(): send response timeout")
 
         return errRespondTimeout
     case err := <-op.errChan:
@@ -318,7 +318,7 @@ func (c *Client) RespondWithContext(ctx context.Context, id string, res *json.Ra
 // Close terminates the connection between the client and the websocket server, aborting any in-flight calls
 func (c *Client) Close() {
     c.cancel()
-    log.Debug("Client.Close(): connection has been closed\n")
+    log.Debug("Client.Close(): connection has been closed")
 }
 
 // run makes sure that it intializes the connection and handles the reconnection to the server side
@@ -331,7 +331,7 @@ func (c *Client) run(ctx context.Context) {
     }()
 
     for {
-        log.Debugf("Client.run(): dialing into the websocket server - %s:%s\n", c.socket, c.path)
+        log.Debugf("Client.run(): dialing into the websocket server - %s:%s", c.socket, c.path)
 
         var dialer websocket.Dialer
         dialer.NetDial = func(network, address string) (net.Conn, error) {
@@ -344,17 +344,17 @@ func (c *Client) run(ctx context.Context) {
         if err != nil {
             select {
             case <-ctx.Done():
-                log.Debug("Client.run(): parent context has been cancelled, terminate the connection. Quitting....\n")
+                log.Debug("Client.run(): parent context has been cancelled, terminate the connection. Quitting....")
 
                 return
             case <-time.After(reconnectWaitTime):
-                log.Debugf("Client.run(): failed to connect to the unix domain server: %s:%s. Error: %s\n.", c.socket, c.path, err.Error())
+                log.Debugf("Client.run(): failed to connect to the unix domain server: %s:%s. Error: %s.", c.socket, c.path, err.Error())
             }
 
             continue
         }
 
-        log.Debugf("Client.run(): successfully established a connection to the websocket server: %s:%s\n", c.socket, c.path)
+        log.Debugf("Client.run(): successfully established a connection to the websocket server: %s:%s", c.socket, c.path)
 
         go c.consume(conn)
 
@@ -364,14 +364,14 @@ func (c *Client) run(ctx context.Context) {
 
         if c.onConn != nil {
             if err := c.onConn(c); err != nil {
-                log.Debugf("Client.run(): unable to execute onInit callback func successfully. Error: %s\n", err.Error())
+                log.Debugf("Client.run(): unable to execute onInit callback func successfully. Error: %s", err.Error())
             }
         }
 
         select {
         // client error sent from consume() routine, that loop would exit right after sending the client error into the channel
         case err := <-c.clientErr:
-            log.Debugf("Client.run(): there is an exception during the connection. Ready to reconnect to the server. Error: %s\n", err.Error())
+            log.Debugf("Client.run(): there is an exception during the connection. Ready to reconnect to the server. Error: %s", err.Error())
 
             conn.Close()
 
@@ -380,18 +380,18 @@ func (c *Client) run(ctx context.Context) {
 
             select {
             case <-ctx.Done():
-                log.Debug("Client.run(): parent context has been cancelled, terminate the connection. Quitting....\n")
+                log.Debug("Client.run(): parent context has been cancelled, terminate the connection. Quitting....")
 
                 return
             case <-time.After(reconnectWaitTime):
-                log.Debugf("Client.run(): failed to connect to the unix domain server: %s:%s. Error: %s\n.", c.socket, c.path, err.Error())
+                log.Debugf("Client.run(): failed to connect to the unix domain server: %s:%s. Error: %s.", c.socket, c.path, err.Error())
             }
 
             continue
         case <-ctx.Done():
             // abort in-flight requests. Kill dispatch() routine
             cancel()
-            log.Debug("Client.run(): parent context has been cancelled, terminate the connection. Quitting....\n")
+            log.Debug("Client.run(): parent context has been cancelled, terminate the connection. Quitting....")
 
             return
         }
@@ -418,7 +418,7 @@ func (c *Client) dispatch(ctx context.Context, conn *websocket.Conn) {
         select {
         case req := <-c.requestOps:
             if conn == nil {
-                log.Debug("Client.dispatch(): failed to receive the call request since there is no active websocket connection\n")
+                log.Debug("Client.dispatch(): failed to receive the call request since there is no active websocket connection")
 
                 req.err <- errNilConnection
                 return
@@ -426,7 +426,7 @@ func (c *Client) dispatch(ctx context.Context, conn *websocket.Conn) {
 
             msg, err := encodeClientRequest(req.id, req.method, req.args)
             if err != nil {
-                log.Debugf("Client.dispatch(): failed to encode the client request as a json rpc call. Error: %s\n", err.Error())
+                log.Debugf("Client.dispatch(): failed to encode the client request as a json rpc call. Error: %s", err.Error())
 
                 req.err <- err
                 continue
@@ -434,16 +434,16 @@ func (c *Client) dispatch(ctx context.Context, conn *websocket.Conn) {
 
             err = conn.WriteMessage(websocket.BinaryMessage, msg)
             if err != nil {
-                log.Debugf("Client.dispatch(): failed to send the call request through the websocket connection. Error: %s\n", err.Error())
+                log.Debugf("Client.dispatch(): failed to send the call request through the websocket connection. Error: %s", err.Error())
 
                 req.err <- err
                 return
             }
 
-            log.Debugf("Client.dispatch(): successfully send the call request through the websocket connection. Request:{id: %s, method: %s, params: %v}\n", req.id, req.method, req.args)
+            log.Debugf("Client.dispatch(): successfully send the call request through the websocket connection. Request:{id: %s, method: %s, params: %v}", req.id, req.method, req.args)
         case reqSent := <-c.requestDone:
             if c.deliveryMap == nil {
-                log.Debug("Client.dispatch(): found empty delivery map. Client should be reinialized...\n")
+                log.Debug("Client.dispatch(): found empty delivery map. Client should be reinialized...")
 
                 continue
             }
@@ -451,7 +451,7 @@ func (c *Client) dispatch(ctx context.Context, conn *websocket.Conn) {
             c.deliveryMap.removeRequestOp(reqSent.id, reqSent.response)
         case resp := <-c.responseOps:
             if conn == nil {
-                log.Debug("Client.dispatch(): failed to send back the response since there is no active websocket connection\n")
+                log.Debug("Client.dispatch(): failed to send back the response since there is no active websocket connection")
 
                 resp.errChan <- errNilConnection
                 return
@@ -459,7 +459,7 @@ func (c *Client) dispatch(ctx context.Context, conn *websocket.Conn) {
 
             msg, err := encodeClientResponse(resp.id, resp.result, resp.err)
             if err != nil {
-                log.Debugf("Client.dispatch(): failed to encode the client response as a json rpc call. Error: %s\n", err.Error())
+                log.Debugf("Client.dispatch(): failed to encode the client response as a json rpc call. Error: %s", err.Error())
 
                 resp.errChan <- err
                 continue
@@ -467,16 +467,16 @@ func (c *Client) dispatch(ctx context.Context, conn *websocket.Conn) {
 
             err = conn.WriteMessage(websocket.BinaryMessage, msg)
             if err != nil {
-                log.Debugf("Client.dispatch(): failed to send the response through the websocket connection. Error: %s\n", err.Error())
+                log.Debugf("Client.dispatch(): failed to send the response through the websocket connection. Error: %s", err.Error())
 
                 resp.errChan <- err
                 return
             }
 
-            log.Debugf("Client.dispatch(): successfully send the response through the websocket connection. Request:{id: %s, result: %s, error: %s}\n", resp.id, resp.result, resp.err)
+            log.Debugf("Client.dispatch(): successfully send the response through the websocket connection. Request:{id: %s, result: %s, error: %s}", resp.id, resp.result, resp.err)
             resp.errChan <- nil
         case <-ctx.Done():
-            log.Debug("Client.dispatch(): the connection has been closed. Abort the process loop...\n")
+            log.Debug("Client.dispatch(): the connection has been closed. Abort the process loop...")
 
             return
         }
@@ -487,7 +487,7 @@ func (c *Client) consume(conn *websocket.Conn) {
     // client errors would be sent if something bad happens with the websocket connection
     for {
         if conn == nil {
-            log.Debugf("Client.consume(): the connection is not active - %s:%s\n", c.socket, c.path)
+            log.Debugf("Client.consume(): the connection is not active - %s:%s", c.socket, c.path)
 
             c.clientErr <- errNilConnection
             break
@@ -495,7 +495,7 @@ func (c *Client) consume(conn *websocket.Conn) {
 
         _, msg, err := conn.ReadMessage()
         if err != nil {
-            log.Debugf("Client.consume(): there is an exception while reading message from the websocket connection. Error: %s\n", err.Error())
+            log.Debugf("Client.consume(): there is an exception while reading message from the websocket connection. Error: %s", err.Error())
 
             c.clientErr <- err
             break
@@ -503,7 +503,7 @@ func (c *Client) consume(conn *websocket.Conn) {
 
         id, res, err := decodeClientResponse(msg)
         if err != nil {
-            log.Debugf("Client.consume(): unexpected client response, possibly a request message. Passing on for request processing. Error: %s.\n", err.Error())
+            log.Debugf("Client.consume(): unexpected client response, possibly a request message. Passing on for request processing. Error: %s.", err.Error())
 
             c.srvReqChan.send(msg)
             continue

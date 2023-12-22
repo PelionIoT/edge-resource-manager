@@ -61,33 +61,33 @@ func Run(config *resourcemanagerconfig.ResourceManagerConfig) {
     log.Info("resourceManager.Run")
 
     if config == nil {
-        log.Warning("ResourceManager: No config Provided\n")
+        log.Warning("ResourceManager: No config Provided")
         return
     }
     if config.EdgeCoreSocketPath == "" {
-        log.Warning("ResourceManager: edge_core_socketpath not provided in config file. Using default socketpath '/tmp/edge.sock'\n")
+        log.Warning("ResourceManager: edge_core_socketpath not provided in config file. Using default socketpath '/tmp/edge.sock'")
         config.EdgeCoreSocketPath = "/tmp/edge.sock"
     }
     if config.EdgeResources == nil {
-        log.Errorf("ResourceManager: No edge resources provided\n")
+        log.Errorf("ResourceManager: No edge resources provided")
         return
     }
     if config.ConfigObjectID <= 0 {
-        log.Errorf("ResourceManager: lwm2m objectid not provided\n")
+        log.Errorf("ResourceManager: lwm2m objectid not provided")
         return
     }
     var err error
     gcdConfig = config
-    log.Infof("ResourceManager: connecting to edge-core\n")
+    log.Infof("ResourceManager: connecting to edge-core")
 
     resourceManagementClient, err = connect(config.EdgeCoreSocketPath) //connect to edge-core
     if err == nil {
         defer resourceManagementClient.Close()
     } else {
-        log.Errorf("ResourceManager: could not connect to edge-core\n")
+        log.Errorf("ResourceManager: could not connect to edge-core")
         return
     }
-    log.Infof("ResourceManager: successfully connected to edge-core\n")
+    log.Infof("ResourceManager: successfully connected to edge-core")
     objectinstanceid := 0
     for _, edgeResource := range config.EdgeResources {
         err = addResource(config.ConfigObjectID, objectinstanceid, 1, 1, "string", edgeResource.Name)
@@ -115,7 +115,7 @@ func Run(config *resourcemanagerconfig.ResourceManagerConfig) {
                 }
                 writeResource(config.ConfigObjectID, objectinstanceid, 3, 3, "string", *b64Config)
             } else {
-                log.Errorf("ResourceManager: could not read %s config file %s, err: %v\n", edgeResource.Name, edgeResource.ConfigFilePath, err.Error())
+                log.Errorf("ResourceManager: could not read %s config file %s, err: %v", edgeResource.Name, edgeResource.ConfigFilePath, err.Error())
             }
         }
         objectinstanceid = objectinstanceid + 1
@@ -131,14 +131,14 @@ func updateResourceLoop() {
             select {
             case srvreq := <-srvreqchannel:
                 json.Unmarshal(srvreq, &c)
-                log.Debugf("ResourceManager: Got request from edge-core: %v\n", c)
+                log.Debugf("ResourceManager: Got request from edge-core: %v", c)
                 if c.Method == "write" {
                     params := c.Params.(map[string]interface{})
                     uri := params["uri"].(map[string]interface{})
                     objectinstanceid := 0
                     for _, edgeResource := range gcdConfig.EdgeResources {
                         if uri != nil && uri["objectId"].(float64) == float64(gcdConfig.ConfigObjectID) && uri["objectInstanceId"].(float64) == float64(objectinstanceid) && uri["resourceId"].(float64) == 3 {
-                            log.Debugf("ResourceManager: Writing %s config file\n", edgeResource.Name)
+                            log.Debugf("ResourceManager: Writing %s config file", edgeResource.Name)
                             if edgeResource.ConfigFilePath != "" && writeConfigFile(edgeResource.ConfigFilePath, params["value"].(string)) == nil {
                                 okresult := json.RawMessage(`"ok"`)
                                 resourceManagementClient.Respond(c.ID, &okresult, nil)
@@ -155,12 +155,12 @@ func updateResourceLoop() {
                         objectinstanceid = objectinstanceid + 1
                     }
                 } else {
-                    log.Debugf("ResourceManager: Unhandled request: %v\n", c.Method)
+                    log.Debugf("ResourceManager: Unhandled request: %v", c.Method)
                 }
             }
         }
     } else {
-        log.Errorf("ResourceManager: Could not register request receiver: %s\n", err.Error())
+        log.Errorf("ResourceManager: Could not register request receiver: %s", err.Error())
     }
 }
 
@@ -177,7 +177,7 @@ func readConfigFile(filepath string) (*string, error) {
 func writeConfigFile(filepath string, config string) error {
     file, err := os.Create(filepath)
     if err != nil {
-        log.Errorf("ResourceManager: could not create config file: %v\n", err)
+        log.Errorf("ResourceManager: could not create config file: %v", err)
         return err
     }
 
@@ -194,12 +194,12 @@ func connect(edgecorescoketpath string) (*Client, error) {
     var res string
     err := client.Call("gw_resource_manager_register", gwResourceManagerRegisterArgs{Name: "edge_resource_manager"}, &res)
 
-    log.Debugf("ResourceManager: gw_resource_manager_register response:%v\n", res)
+    log.Debugf("ResourceManager: gw_resource_manager_register response:%v", res)
     if err != nil {
-        log.Errorf("ResourceManager: Failed to connect to edge-core %s\n", err.Error())
+        log.Errorf("ResourceManager: Failed to connect to edge-core %s", err.Error())
         return nil, err
     }
-    log.Infof("ResourceManager: Websocket connection established with edge-core\n")
+    log.Infof("ResourceManager: Websocket connection established with edge-core")
 
     return client, nil
 }
@@ -229,18 +229,18 @@ func addResource(objectid int, objectinstanceid int, resourceid int, operationsA
     }
 
     if resourceManagementClient == nil {
-        log.Errorf("ResourceManager: resourceManagementClient is nil\n")
+        log.Errorf("ResourceManager: resourceManagementClient is nil")
         return errors.New("resourceManagementClient is nil")
     }
 
     err := resourceManagementClient.Call("add_resource", addResource, &res)
 
-    log.Debugf("ResourceManager: add_resource response:%v\n", res)
+    log.Debugf("ResourceManager: add_resource response:%v", res)
     if err != nil {
-        log.Errorf("ResourceManager: Failed to add resource %s\n", err.Error())
+        log.Errorf("ResourceManager: Failed to add resource %s", err.Error())
         return err
     }
-    log.Infof("ResourceManager: Lwm2m resource %d/%d/%d added\n", objectid, objectinstanceid, resourceid)
+    log.Infof("ResourceManager: Lwm2m resource %d/%d/%d added", objectid, objectinstanceid, resourceid)
     return nil
 
 }
@@ -270,18 +270,18 @@ func writeResource(objectid int, objectinstanceid int, resourceid int, operation
     }
 
     if resourceManagementClient == nil {
-        log.Errorf("ResourceManager: resourceManagementClient is nil\n")
+        log.Errorf("ResourceManager: resourceManagementClient is nil")
         return errors.New("resourceManagementClient is nil")
     }
 
     err := resourceManagementClient.Call("write_resource_value", writeResource, &res)
 
-    log.Debugf("ResourceManager: write response:%v\n", res)
+    log.Debugf("ResourceManager: write response:%v", res)
     if err != nil {
-        log.Errorf("ResourceManager: Failed to write resource %s\n", err.Error())
+        log.Errorf("ResourceManager: Failed to write resource %s", err.Error())
         return err
     }
-    log.Infof("ResourceManager: Lwm2m resource %d/%d/%d added\n", objectid, objectinstanceid, resourceid)
+    log.Infof("ResourceManager: Lwm2m resource %d/%d/%d added", objectid, objectinstanceid, resourceid)
     return nil
 
 }
