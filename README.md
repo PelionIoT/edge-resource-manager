@@ -20,7 +20,7 @@ The **name** and **enable** fields of each LwM2M resource are read only resource
 
 The edge-resource-manager should be started as a systemd service on the gateway.
 
-A typical service file is
+A typical service file is shown below:
 
 ```
 [Unit]
