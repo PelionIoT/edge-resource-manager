@@ -8,7 +8,7 @@ The API is detailed in [grm-json-rpc](https://developer.izumanetworks.com/docs/d
 
 ## Configuration
 
-The edge-resource manager takes a configuration file as it's input that describes the resources that are to be added to edge-core.
+The edge-resource manager takes a configuration file as its input that describes the resources that are to be added to edge-core.
 
 The file [`izuma-base-config.yaml`](izuma-base-config.yaml) provides an example of this configuration file. It is expected that each use case of edge-resource-manager provides their own implementation of the configuration file.
 
