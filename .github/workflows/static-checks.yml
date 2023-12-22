@@ -16,25 +16,23 @@ jobs:
         uses: actions/checkout@v3
 
       # Need to run this 1st, so that the other log files do not cause unnecessary findings
-      # tox already runs pylint
       - name: Run misspell
         if: always()
         run: |
             # Remove the vendor folder - we don't need to check that.
             rm -rf vendor
-            curl -L -o ./install-misspell.sh https://git.io/misspell
-            sh ./install-misspell.sh
-            bin/misspell -i mosquitto . >misspell.log
+            go install github.com/golangci/misspell/cmd/misspell@latest
+            misspell -i mosquitto . >misspell.log
+            echo "## Summary" >>$SUMMARY_FILE
             echo "### misspell" >>$SUMMARY_FILE
-            bin/misspell -error -i mosquitto .
+            cat misspell.log >>$SUMMARY_FILE
             lines=$(wc -l < "misspell.log")
             if [[ $lines -gt 0 ]]; then
               echo "Misspell has findings, fail."
               echo "TEST_FAIL=true" >> $GITHUB_ENV
-              cat misspell.log >>$SUMMARY_FILE
               exit 1
             else
-              echo "No findings" >>$SUMMARY_FILE
+                echo "No findings." >>$SUMMARY_FILE
             fi
 
       - name: Run shellcheck
