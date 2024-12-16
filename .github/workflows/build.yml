@@ -3,7 +3,8 @@ on: push
 
 jobs:
   build-standalone:
-    runs-on: ubuntu-latest
+    # ubuntu-latest breaks, because it is ubuntu 24.04 and it does not have anymore golint via apt
+    runs-on: ubuntu-22.04
     steps:
       - name: Check out code
         uses: actions/checkout@v4
