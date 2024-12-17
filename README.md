@@ -38,3 +38,7 @@ StandardError=journal
 [Install]
 WantedBy=multi-user.target
 ```
+
+## Yocto recipe
+
+There is a Yocto recipe available in [meta-edge/recipes-edge/edge-resource-manager](https://github.com/PelionIoT/meta-edge/tree/main/recipes-edge/edge-resource-manager).
